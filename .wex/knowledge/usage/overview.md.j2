@@ -3,7 +3,7 @@
 ```php
 public function __construct(private ElyseeClient $elysee, private RemoteGuard $guard) {}
 
-// The latest publications first, then those already read link to: at most 500 new pages.
+// The latest publications first, then those already read link to, and the dossiers listing them: at most 500 new pages.
 $read = $this->guard->attempt($this->elysee, fn () => $this->elysee->crawl(500), 0);
 $this->elysee->countPending();   // addresses known, not read yet
 ```
@@ -34,7 +34,8 @@ A release is its own `body`; an article on a visit holds the speeches delivered 
 wexample_symfony_remote_elysee:
   user_agent: 'my-app/1.0'
   cache_dir: '%kernel.project_dir%/var/remote/elysee'
-  listings: ['/toutes-les-actualites', '/agenda']
+  listings: ['/toutes-les-actualites', '/agenda', '/plan-du-site']
+  prefixes: ['emmanuel-macron']   # the presidents' sections: /<prefix>/YYYY/MM/DD/<slug>, dossiers /<prefix>/<slug>
   delay: 1000          # milliseconds between two requests
   attempts: 3
   retry_delay: 5       # seconds, times the attempt number

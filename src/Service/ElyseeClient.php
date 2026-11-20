@@ -19,8 +19,9 @@ use Wexample\SymfonyRemoteElysee\Class\ElyseePublication;
  * them only to its own search, its sitemaps are not ours to read.
  *
  * A crawl reads the pages listing the latest publications, then follows the
- * links from one publication to the next, one request at a time, a pause
- * between two. Each publication read is kept on disk, parsed and compressed,
+ * links from one publication to the next and through the dossiers — a visit,
+ * a theme — listing them, which reach back through the archive: one request at
+ * a time, a pause between two. Each publication read is kept on disk, parsed and compressed,
  * and never asked for again; the addresses still to visit are kept beside, so
  * that the next crawl goes on where this one stopped. A page gone (404) is
  * remembered as such.
@@ -34,9 +35,11 @@ class ElyseeClient implements RemoteInterface
 
     public const string DEFAULT_BASE_URL = 'https://www.elysee.fr';
 
-    public const array DEFAULT_LISTINGS = ['/toutes-les-actualites', '/agenda'];
+    public const array DEFAULT_LISTINGS = ['/toutes-les-actualites', '/agenda', '/plan-du-site'];
 
     private const string GONE = 'gone';
+
+    private const string DOSSIER = 'dossier';
 
     /**
      * @param list<string> $listings the pages listing the latest publications, past the base address
@@ -106,10 +109,10 @@ class ElyseeClient implements RemoteInterface
                     continue;
                 }
 
-                $publication = $this->readPublication($url);
+                $links = $this->parser->isPublication($url) ? $this->readPublication($url)?->links : $this->readDossier($url);
                 ++$read;
 
-                foreach ($publication?->links ?? [] as $link) {
+                foreach ($links ?? [] as $link) {
                     if (! isset($frontier[$link]) && ! is_file($this->pathOf($link))) {
                         $frontier[$link] = true;
                     }
@@ -148,7 +151,7 @@ class ElyseeClient implements RemoteInterface
         foreach ($files as $file) {
             $data = json_decode(gzdecode(file_get_contents($file->getPathname())), true);
 
-            if (is_array($data) && self::GONE !== ($data['state'] ?? null)) {
+            if (is_array($data) && ! isset($data['state'])) {
                 yield ElyseePublication::fromArray($data);
             }
         }
@@ -174,7 +177,21 @@ class ElyseeClient implements RemoteInterface
     }
 
     /**
-     * @return list<string> the publications a listing page links to
+     * A dossier lists publications, and other dossiers: read once, its links
+     * followed, nothing kept of it but that it was read.
+     *
+     * @return list<string>
+     */
+    private function readDossier(string $url): array
+    {
+        $html = $this->fetch($url);
+        $this->filesystem->dumpFile($this->pathOf($url), gzencode(json_encode(['state' => self::DOSSIER])));
+
+        return null === $html ? [] : $this->parser->parseLinks($html, $this->baseUrl);
+    }
+
+    /**
+     * @return list<string> the publications and dossiers a listing page links to
      */
     private function readListing(string $listing): array
     {

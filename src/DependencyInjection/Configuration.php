@@ -5,6 +5,7 @@ namespace Wexample\SymfonyRemoteElysee\DependencyInjection;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Wexample\SymfonyRemoteElysee\Service\ElyseeClient;
+use Wexample\SymfonyRemoteElysee\Service\ElyseePageParser;
 
 class Configuration implements ConfigurationInterface
 {
@@ -27,6 +28,11 @@ class Configuration implements ConfigurationInterface
                     ->info('The pages listing the latest publications, past the base address.')
                     ->scalarPrototype()->end()
                     ->defaultValue(ElyseeClient::DEFAULT_LISTINGS)
+                ->end()
+                ->arrayNode('prefixes')
+                    ->info('The presidents\' sections of the site: their publications are /<prefix>/YYYY/MM/DD/<slug>, their dossiers /<prefix>/<slug>.')
+                    ->scalarPrototype()->end()
+                    ->defaultValue(ElyseePageParser::DEFAULT_PREFIXES)
                 ->end()
                 ->integerNode('delay')->defaultValue(1000)->min(0)->info('Milliseconds between two requests.')->end()
                 ->integerNode('attempts')->defaultValue(3)->min(1)->end()

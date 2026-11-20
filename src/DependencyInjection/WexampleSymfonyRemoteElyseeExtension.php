@@ -13,7 +13,7 @@ class WexampleSymfonyRemoteElyseeExtension extends AbstractWexampleSymfonyExtens
     ): void {
         $config = $this->processConfiguration(new Configuration(), $configs);
 
-        foreach (['cache_dir', 'user_agent', 'base_url', 'listings', 'delay', 'attempts', 'retry_delay'] as $key) {
+        foreach (['cache_dir', 'user_agent', 'base_url', 'listings', 'prefixes', 'delay', 'attempts', 'retry_delay'] as $key) {
             $container->setParameter('wexample_symfony_remote_elysee.'.$key, $config[$key]);
         }
 

@@ -71,6 +71,27 @@ class ElyseeClientTest extends TestCase
         $this->assertSame(['A', 'B'], $titles);
     }
 
+    public function testTheDossiersLeadBackThroughTheArchive(): void
+    {
+        $site = [
+            '/toutes-les-actualites' => fn () => $this->page('Actualités', '/emmanuel-macron/2026/11/16/a'),
+            '/emmanuel-macron/2026/11/16/a' => fn () => $this->page('A', '/emmanuel-macron/ecologie'),
+            '/emmanuel-macron/ecologie' => fn () => $this->page('Écologie', '/emmanuel-macron/2019/05/02/old', '/emmanuel-macron/ecologie'),
+            '/emmanuel-macron/2019/05/02/old' => fn () => $this->page('Old'),
+        ];
+
+        $this->assertSame(3, $this->client($site)->crawl(10));
+
+        // The dossier is read once; it is no publication.
+        $this->requested = [];
+        $this->assertSame(0, $this->client($site)->crawl(10));
+        $this->assertSame(['/toutes-les-actualites'], $this->requested);
+
+        $titles = array_map(static fn ($publication): string => $publication->title, iterator_to_array($this->client($site)->getPublications(), false));
+        sort($titles);
+        $this->assertSame(['A', 'Old'], $titles);
+    }
+
     public function testAFailureKeepsWhatWasRead(): void
     {
         $site = [

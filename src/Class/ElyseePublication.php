@@ -16,7 +16,7 @@ final readonly class ElyseePublication
      * @param list<string>      $tags    its subjects (« International », « Malaisie »)
      * @param string|null       $body    its own words, paragraphs a blank line apart
      * @param list<ElyseeText>  $texts   the texts it holds in full: the speeches delivered on the occasion
-     * @param list<string>      $links   the other publications it links to, as addresses
+     * @param list<string>      $links   the other publications and the dossiers it links to, as addresses
      */
     public function __construct(
         public string $url,

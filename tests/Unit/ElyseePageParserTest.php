@@ -41,6 +41,18 @@ class ElyseePageParserTest extends TestCase
         ], $publication->links);
     }
 
+    public function testAPublicationIsToldFromADossier(): void
+    {
+        $parser = new ElyseePageParser();
+
+        $this->assertTrue($parser->isPublication(self::URL));
+        $this->assertFalse($parser->isPublication('https://www.elysee.fr/emmanuel-macron/ecologie'));
+        $this->assertSame(
+            ['https://www.elysee.fr/emmanuel-macron/ecologie', 'https://www.elysee.fr/emmanuel-macron/2019/05/02/old'],
+            $parser->parseLinks('<a href="/emmanuel-macron/ecologie">x</a><a href="https://www.elysee.fr/emmanuel-macron/2019/05/02/old">y</a><a href="/la-presidence/budget">z</a>', 'https://www.elysee.fr')
+        );
+    }
+
     public function testAPageWithoutTitleIsNoPublication(): void
     {
         $this->expectException(RemoteException::class);

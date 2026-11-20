@@ -19,10 +19,7 @@ use Wexample\SymfonyRemoteElysee\Class\ElyseeText;
  */
 class ElyseePageParser
 {
-    /**
-     * A publication's address, past the site's: `/emmanuel-macron/2026/11/15/slug`.
-     */
-    public const string PUBLICATION_PATH = '#^/[a-z-]+/\d{4}/\d{2}/\d{2}/[^/?\#]+$#';
+    public const array DEFAULT_PREFIXES = ['emmanuel-macron'];
 
     private const array MONTHS = [
         'janvier' => 1, 'février' => 2, 'fevrier' => 2, 'mars' => 3, 'avril' => 4, 'mai' => 5, 'juin' => 6,
@@ -30,6 +27,24 @@ class ElyseePageParser
     ];
 
     private const string BLOCKS = 'p, h2, h3, h4, li, blockquote';
+
+    /**
+     * @param list<string> $prefixes the presidents' sections of the site (`emmanuel-macron`): their
+     *                               publications are `/<prefix>/2026/11/15/<slug>`, their dossiers —
+     *                               a visit, a theme, listing its publications — `/<prefix>/<slug>`
+     */
+    public function __construct(
+        private readonly array $prefixes = self::DEFAULT_PREFIXES,
+    ) {
+    }
+
+    /**
+     * Whether $url is a publication's: else a dossier's.
+     */
+    public function isPublication(string $url): bool
+    {
+        return 1 === preg_match('#^'.$this->prefixPattern().'/\d{4}/\d{2}/\d{2}/[^/?\#]+$#', (string) parse_url($url, PHP_URL_PATH));
+    }
 
     /**
      * @throws RemoteException when the page has no title: not a publication, or the site changed
@@ -73,7 +88,7 @@ class ElyseePageParser
     }
 
     /**
-     * The publications a page links to — a listing, a publication —, as addresses.
+     * The publications and dossiers a page links to, as addresses.
      *
      * @return list<string>
      */
@@ -119,7 +134,7 @@ class ElyseePageParser
             $href = (string) $anchor->getAttribute('href');
             $path = str_starts_with($href, $origin) ? substr($href, strlen($origin)) : $href;
 
-            if (1 === preg_match(self::PUBLICATION_PATH, $path)) {
+            if (1 === preg_match('#^'.$this->prefixPattern().'/(\d{4}/\d{2}/\d{2}/)?[a-z0-9_-]+$#i', $path)) {
                 $links[$origin.$path] = true;
             }
         }
@@ -171,6 +186,11 @@ class ElyseePageParser
         $text = trim(implode("\n", array_filter($lines, static fn (string $line): bool => '' !== $line)));
 
         return '' === $text ? null : $text;
+    }
+
+    private function prefixPattern(): string
+    {
+        return '/(?:'.implode('|', array_map(static fn (string $prefix): string => preg_quote($prefix, '#'), $this->prefixes)).')';
     }
 
     private function meta(
