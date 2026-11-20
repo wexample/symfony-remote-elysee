@@ -1,7 +1,7 @@
 {
   "name": "wexample/symfony-remote-elysee",
   "description": "elysee.fr as a symfony-remote: the publications of the Présidence de la République — releases, articles, the texts of the speeches —, read politely and kept on disk",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "type": "library",
   "license": "MIT",
   "autoload": {
