@@ -1,0 +1,17 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    Wexample\SymfonyRemoteElysee\Service\ElyseePageParser: ~
+
+    Wexample\SymfonyRemoteElysee\Service\ElyseeClient:
+        arguments:
+            $cacheDir: '%wexample_symfony_remote_elysee.cache_dir%'
+            $userAgent: '%wexample_symfony_remote_elysee.user_agent%'
+            $baseUrl: '%wexample_symfony_remote_elysee.base_url%'
+            $listings: '%wexample_symfony_remote_elysee.listings%'
+            $delay: '%wexample_symfony_remote_elysee.delay%'
+            $attempts: '%wexample_symfony_remote_elysee.attempts%'
+            $retryDelay: '%wexample_symfony_remote_elysee.retry_delay%'

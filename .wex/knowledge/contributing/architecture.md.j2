@@ -1,0 +1,11 @@
+## Architecture
+
+Under `Wexample\SymfonyRemoteElysee\` (PSR-4 on `src/`):
+
+- {{ path("src/Service/ElyseePageParser.php") }} reads a page with PHP's HTML5 parser (`Dom\HTMLDocument`, CSS selectors): the title from `h1`, the section, date and tags from the page's `og:article:*` metadata, the publication's own words from its `.rich-text .ck-styled` sections, its texts from the document cards (`section.js-document .card`: `.card__top__title`, `.chapo` for the day, `.card__body`). A transcript dialog repeats a card outside `section.js-document`: not read. The links kept are those to publications (`/<president>/YYYY/MM/DD/<slug>`).
+- {{ path("src/Service/ElyseeClient.php") }}, the remote, crawls and keeps: one `publications/<path>.json.gz` per publication read (`{"state": "gone"}` for a page answering 404 or 410), and `frontier.json`, the addresses still to visit, breadth first, the latest listed at its head. Both on disk: the client keeps nothing in memory from one call to the next. Every request carries the configured user agent and waits `delay` before it.
+- {{ path("src/Class/ElyseePublication.php") }} and {{ path("src/Class/ElyseeText.php") }}, readonly values, written to disk and read back through `toArray()` and `fromArray()`.
+
+### Tests
+
+The parser on a trimmed page (`tests/Fixtures/publication.html`): metadata, its own words, a card read once beside its transcript, the links kept. The client on Symfony's `MockHttpClient`, with no delay: a crawl stopped by its limit and taken up again, a page gone asked once, a failure keeping what was read.
